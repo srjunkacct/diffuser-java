@@ -1,5 +1,6 @@
 package org.technodrome.examples;
 
+import ai.djl.Device;
 import ai.djl.Model;
 import ai.djl.basicdataset.cv.classification.Mnist;
 import ai.djl.basicmodelzoo.basic.Mlp;
@@ -20,8 +21,12 @@ import ai.djl.training.listener.TrainingListener;
 import ai.djl.training.loss.Loss;
 import ai.djl.training.util.ProgressBar;
 import ai.djl.translate.TranslateException;
+import org.apache.commons.cli.ParseException;
 
 import java.io.IOException;
+
+import static ai.djl.examples.training.util.Arguments.parseArgs;
+import static javax.script.ScriptEngine.ENGINE;
 
 /**
  * An example of training an image classification (MNIST) model.
@@ -32,14 +37,15 @@ import java.io.IOException;
  */
 public final class TrainMnist {
 
+    private final String engine = "PyTorch";
     private TrainMnist() {}
 
-    public static void main(String[] args) throws IOException, TranslateException {
+    public static void main(String[] args) throws IOException, TranslateException, ParseException {
         TrainMnist.runExample(args);
     }
 
-    public static TrainingResult runExample(String[] args) throws IOException, TranslateException {
-        Arguments arguments = new Arguments().parseArgs(args);
+    public static TrainingResult runExample(String[] args) throws IOException, TranslateException, ParseException {
+        Arguments arguments = parseArgs(args);
         if (arguments == null) {
             return null;
         }
@@ -51,7 +57,7 @@ public final class TrainMnist {
                         Mnist.NUM_CLASSES,
                         new int[] {128, 64});
 
-        try (Model model = Model.newInstance("mlp", arguments.getEngine())) {
+        try (Model model = Model.newInstance("mlp", "PyTorch")) {
             model.setBlock(block);
 
             // get training and validation dataset
@@ -93,7 +99,7 @@ public final class TrainMnist {
                 });
         return new DefaultTrainingConfig(Loss.softmaxCrossEntropyLoss())
                 .addEvaluator(new Accuracy())
-                .optDevices(arguments.getMaxGpus())
+                .optDevices(new Device[]{ Device.gpu() })
                 .addTrainingListeners(TrainingListener.Defaults.logging(outputDir))
                 .addTrainingListeners(listener);
     }
@@ -103,7 +109,7 @@ public final class TrainMnist {
         Mnist mnist =
                 Mnist.builder()
                         .optUsage(usage)
-                        .optManager(NDManager.newBaseManager(arguments.getEngine()))
+                        .optManager(NDManager.newBaseManager(ENGINE))
                         .setSampling(arguments.getBatchSize(), true)
                         .optLimit(arguments.getLimit())
                         .build();
