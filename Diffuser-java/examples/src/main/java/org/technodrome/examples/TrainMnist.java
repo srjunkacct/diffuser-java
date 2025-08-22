@@ -45,7 +45,7 @@ public final class TrainMnist {
         TrainMnist.runExample(args);
     }
 
-    public static TrainingResult runExample(String[] args) throws IOException, TranslateException, ParseException {
+    public static void runExample(String[] args) throws IOException, TranslateException, ParseException {
         CommandLineValues arguments = new CommandLineValues(args);
         CmdLineParser parser = new CmdLineParser(arguments);
 
@@ -64,33 +64,32 @@ public final class TrainMnist {
 
         // TODO:  Is PyTorch engine available?
         // TODO:  Is MXNet engine available?
-        try (Model model = Model.newInstance("mlp", "PyTorch")) {
-            model.setBlock(block);
+        Model model = Model.newInstance("mlp", "PyTorch");
+        model.setBlock(block);
 
-            // get training and validation dataset
-            RandomAccessDataset trainingSet = getDataset(Dataset.Usage.TRAIN, arguments);
-            RandomAccessDataset validateSet = getDataset(Dataset.Usage.TEST, arguments);
+        // get training and validation dataset
+        RandomAccessDataset trainingSet = getDataset(Dataset.Usage.TRAIN, arguments);
+        RandomAccessDataset validateSet = getDataset(Dataset.Usage.TEST, arguments);
 
-            // setup training configuration
-            DefaultTrainingConfig config = setupTrainingConfig(arguments);
+        // setup training configuration
+        DefaultTrainingConfig config = setupTrainingConfig(arguments);
 
-            try (Trainer trainer = model.newTrainer(config)) {
-                trainer.setMetrics(new Metrics());
+        Trainer trainer = model.newTrainer(config);
+        trainer.setMetrics(new Metrics());
 
-                /*
-                 * MNIST is 28x28 grayscale image and pre processed into 28 * 28 NDArray.
-                 * 1st axis is batch axis, we can use 1 for initialization.
-                 */
-                Shape inputShape = new Shape(1, Mnist.IMAGE_HEIGHT * Mnist.IMAGE_WIDTH);
+        /*
+         * MNIST is 28x28 grayscale image and pre processed into 28 * 28 NDArray.
+         * 1st axis is batch axis, we can use 1 for initialization.
+         */
+        Shape inputShape = new Shape(1, Mnist.IMAGE_HEIGHT * Mnist.IMAGE_WIDTH);
 
-                // initialize trainer with proper input shape
-                trainer.initialize(inputShape);
+        // initialize trainer with proper input shape
+        trainer.initialize(inputShape);
 
-                EasyTrain.fit(trainer, arguments.getEpoch(), trainingSet, validateSet);
+        EasyTrain.fit(trainer, arguments.getEpoch(), trainingSet, validateSet);
 
-                return trainer.getTrainingResult();
-            }
-        }
+        model.close();
+
     }
 
     private static DefaultTrainingConfig setupTrainingConfig(CommandLineValues arguments) {
