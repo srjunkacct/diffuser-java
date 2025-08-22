@@ -1,4 +1,4 @@
-package org.technodrome.examples;
+package org.technodrome.examples.mnist;
 
 import ai.djl.Device;
 import ai.djl.Model;

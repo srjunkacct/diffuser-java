@@ -1,15 +1,8 @@
-package org.technodrome.examples;
+package org.technodrome.examples.mnist;
 
 import org.kohsuke.args4j.CmdLineException;
 import org.kohsuke.args4j.CmdLineParser;
 import org.kohsuke.args4j.Option;
-
-//private boolean isSymbolic;
-//private boolean preTrained;
-//private String outputDir;
-//private long limit;
-//private String modelDir;
-//private Map<String, String> criteria;
 
 public class CommandLineValues {
     @Option(name = "-e", aliases = {"--epoch"}, required = true,
