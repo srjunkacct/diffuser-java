@@ -23,18 +23,18 @@ public class Utilities {
         double s = 0.008;
         int stepsPlusOne = steps + 1;
         NDArray alphas = manager.linspace(0, stepsPlusOne, stepsPlusOne);
-        alphas.div(stepsPlusOne);
-        alphas.add(s);
-        alphas.mul(Math.PI * 0.5 / (1.0 + s));
-        alphas.cos();
-        alphas.pow(2);
+        alphas = alphas.div(stepsPlusOne);
+        alphas = alphas.add(s);
+        alphas = alphas.mul(Math.PI * 0.5 / (1.0 + s));
+        alphas = alphas.cos();
+        alphas = alphas.pow(2);
         NDIndex futureIndex = new NDIndex("1:");
         NDIndex prevIndex = new NDIndex(":-1");
         NDArray betas = alphas.get(futureIndex);
-        betas.div(alphas.get(prevIndex));
-        betas.mul(-1.0);
-        betas.add(1.0);
-        betas.clip(0.0, 0.999);
+        betas = betas.div(alphas.get(prevIndex));
+        betas = betas.mul(-1.0);
+        betas = betas.add(1.0);
+        betas = betas.clip(0.0, 0.999);
         return betas;
     }
 }
