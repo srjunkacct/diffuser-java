@@ -11,7 +11,7 @@ import java.util.List;
 
 import static org.technodrome.diffuser.Utilities.extract;
 
-public class GaussianDiffusion {
+public class GaussianDiffusion extends Block {
 
     private static NDManager manager = NDManager.newBaseManager(Device.gpu());
     private static Utilities utilities = new Utilities(manager);
@@ -194,7 +194,15 @@ private NDArray pLosses( NDArray xStart, NDArray cond, NDArray t)
 {
     NDArray noise = manager.randomNormal(xStart.getShape());
     NDArray xNoisy = this.qSample(xStart, cond, t);
-    xNoisy =
+    xNoisy = applyConditioning( xNoisy, cond, this.actionDimension );
+
+    NDArray xRecon = this.denoiserModel.forward( xStart, t, noise );
+    xRecon = applyConditioning( xReco, cond, this.actionDimension);
+
+    if ( this.predictEpsilon )
+    {
+NDArray[] lossAndInfo =
+    }
 }
 //
 //    def p_losses(self, x_start, cond, t):
@@ -241,4 +249,5 @@ private NDArray pLosses( NDArray xStart, NDArray cond, NDArray t)
 //            return self.model(x, cond, t)
 
 
+    public record Sample( NDArray trajectories, NDArray values, NDArraty chains);
 }
