@@ -1,13 +1,15 @@
-import ai.djl.Model;
-import ai.djl.ndarray.*;
-import ai.djl.training.ParameterStore;
+package org.technodrome.diffuser;
+
+import ai.djl.ndarray.NDArray;
+import ai.djl.ndarray.NDList;
 import ai.djl.nn.Block;
+import ai.djl.training.ParameterStore;
 
 public class BlockDenoiser implements Denoiser {
     private final Block block;
     private final ParameterStore ps;
 
-    public BlockDenoiseModel(Block block, ParameterStore ps) {
+    public BlockDenoiser(Block block, ParameterStore ps) {
         this.block = block;
         this.ps = ps;
     }
@@ -20,7 +22,7 @@ public class BlockDenoiser implements Denoiser {
         // For now, assume cond is already an NDArray:
         NDArray condArr = (NDArray) cond;
 
-        NDList out = block.forward(ps, new NDList(x, condArr, t), training);
+        NDList out = block.forward(ps, new NDList(x, condArr, t), isTraining);
         return out.singletonOrThrow();
     }
 }

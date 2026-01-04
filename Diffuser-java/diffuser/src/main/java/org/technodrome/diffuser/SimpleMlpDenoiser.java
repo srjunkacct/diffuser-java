@@ -1,7 +1,18 @@
+package org.technodrome.diffuser;
 
+import ai.djl.ndarray.NDArray;
+import ai.djl.ndarray.NDArrays;
+import ai.djl.ndarray.NDList;
+import ai.djl.ndarray.NDManager;
+import ai.djl.ndarray.types.DataType;
+import ai.djl.ndarray.types.Shape;
+import ai.djl.nn.Activation;
+import ai.djl.nn.Block;
+import ai.djl.nn.SequentialBlock;
+import ai.djl.nn.core.Linear;
 import ai.djl.training.ParameterStore;
 
-public final class SimpleMlpDenoiser implements DenoiseModel {
+public final class SimpleMlpDenoiser implements Denoiser {
 
     private final Block mlp;              // maps (D + tDim) -> D
     private final ParameterStore ps;
@@ -52,7 +63,9 @@ public final class SimpleMlpDenoiser implements DenoiseModel {
         return outFlat.reshape(B, H, D);
     }
 
-    /** Standard sinusoidal embedding used in diffusion models. */
+    /**
+     * Standard sinusoidal embedding used in diffusion models.
+     */
     private static NDArray sinusoidalTimeEmbedding(NDArray tFloat, int dim) {
         // tFloat: (B,)
         NDManager m = tFloat.getManager();

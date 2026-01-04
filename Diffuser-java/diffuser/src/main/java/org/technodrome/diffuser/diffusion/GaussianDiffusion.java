@@ -1,4 +1,4 @@
-package org.technodrome.diffuser;
+package org.technodrome.diffuser.diffusion;
 
 import ai.djl.Device;
 import ai.djl.ndarray.NDArray;
@@ -6,15 +6,18 @@ import ai.djl.ndarray.NDManager;
 import ai.djl.ndarray.index.NDIndex;
 import ai.djl.ndarray.types.Shape;
 import org.jetbrains.annotations.Nullable;
+import org.technodrome.diffuser.Denoiser;
+import org.technodrome.diffuser.diffusion.helpers.NDUtils;
 
 import java.util.List;
+import java.util.Map;
 
-import static org.technodrome.diffuser.Utilities.extract;
+import static org.technodrome.diffuser.diffusion.helpers.NDUtils.applyConditioning;
+import static org.technodrome.diffuser.diffusion.helpers.NDUtils.extract;
 
-public class GaussianDiffusion extends Block {
+public class GaussianDiffusion {
 
     private static NDManager manager = NDManager.newBaseManager(Device.gpu());
-    private static Utilities utilities = new Utilities(manager);
     private final Denoiser denoiserModel;
     private int horizon;
     private int observationDimension;
@@ -65,7 +68,7 @@ public class GaussianDiffusion extends Block {
     }
 
     private void initializeBuffers() {
-        NDArray betas = utilities.cosineBetaSchedule(this.timesteps);
+        NDArray betas = NDUtils.cosineBetaSchedule(this.timesteps);
         NDArray alphas = null;
         betas.copyTo(alphas);
         alphas = alphas.mul(-1.0).add(1.0);
@@ -134,7 +137,7 @@ public class GaussianDiffusion extends Block {
     }
 
     private NDArray[] pMeanVariance(NDArray x, NDArray cond, NDArray t) {
-        NDArray xRecon = predictStartFromNoise(x, t, this.denoiserModel.forward(x, cond, t));
+        NDArray xRecon = predictStartFromNoise(x, t, this.denoiserModel.forward(x, cond, t, true));
         if (this.clipDenoised) {
             xRecon.clip(-1., -1.);
         }
@@ -181,7 +184,7 @@ public class GaussianDiffusion extends Block {
 //
 //            #------------------------------------------ training ------------------------------------------#
 
-    private NDArray qSample(NDArray xStart, NDArray t, @Nullable NDArray noise) {
+    private NDArray qSample(NDArray xStart, Map<Integer, NDArray> t, @Nullable NDArray noise) {
         if (noise == null) {
             noise = manager.randomNormal(xStart.getShape());
         }
@@ -190,20 +193,22 @@ public class GaussianDiffusion extends Block {
                 extract(this.sqrtOneMinusAlphasCumProd, t, xStart.getShape()).mul(noise));
     }
 
-private NDArray pLosses( NDArray xStart, NDArray cond, NDArray t)
-{
-    NDArray noise = manager.randomNormal(xStart.getShape());
-    NDArray xNoisy = this.qSample(xStart, cond, t);
-    xNoisy = applyConditioning( xNoisy, cond, this.actionDimension );
 
-    NDArray xRecon = this.denoiserModel.forward( xStart, t, noise );
-    xRecon = applyConditioning( xReco, cond, this.actionDimension);
+    private NDArray pLosses(NDArray xStart, Map<Integer, NDArray> cond, NDArray t) {
 
-    if ( this.predictEpsilon )
-    {
-NDArray[] lossAndInfo =
+        NDArray noise = manager.randomNormal(xStart.getShape());
+        NDArray xNoisy = this.qSample(xStart, cond, t);
+        xNoisy = applyConditioning(xNoisy, cond, this.actionDimension);
+
+        NDArray xRecon = this.denoiserModel.forward(xStart, t, noise, true);
+        xRecon = applyConditioning(xRecon, cond, this.actionDimension);
+
+        if (this.predictEpsilon) {
+            return null;
+        } else {
+            return null;
+        }
     }
-}
 //
 //    def p_losses(self, x_start, cond, t):
 //    noise = torch.randn_like(x_start)
@@ -249,5 +254,7 @@ NDArray[] lossAndInfo =
 //            return self.model(x, cond, t)
 
 
-    public record Sample( NDArray trajectories, NDArray values, NDArraty chains);
+    public record Sample(NDArray trajectories, NDArray values, NDArray chains) {
+
+    }
 }
